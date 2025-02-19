@@ -1,0 +1,129 @@
+---
+title: "Poisson"
+author: "Maria Arreola"
+format: pdf
+editor: visual
+---
+
+```{r}
+install.packages("pacman")
+library(pacman)
+p_load(ggplot2,dplyr, datasets)
+```
+
+```{r}
+data("precip", package= "datasets")
+precip_data<-data.frame(ciudad=names(precip), precipitacion=precip) #es para solo utilizar las columnas de ciudades y precipitacion
+```
+
+```{r}
+lambda_est <-mean(precip_data$precipitacion, na.rm = TRUE)
+lambda_est
+```
+```{r}
+x<-10
+prob_x<-dpois(x, lambda_est) 
+prob_x100<-format(prob_x, scientific=FALSE)
+prob_x100 #probabilidad de que ocurran diez eventos de precipitacion 
+```
+```{r}
+df_pmf<-data.frame(x=0:20, prob=dpois(0:20, lambda_est)) #toma valores del 1-20 y toma los valores de la probabilidad de precipitacion del objeto labda_est
+```
+
+```{r}
+ggplot(df_pmf, aes(x= x, y= prob))+ #el eje de las x va a tomar el valor de la columna llamada   como "x", mientras que en el eje de las y se tomaron los valores de la columna "prob", los cuales se encuentran en el objeto llamado data_pmf
+  geom_bar(stat="identity",  #formato de la grafica
+           fill="lightblue",
+           color="black")+
+  labs(title="Probabilidad de Poisson",
+      x="Número de eventos de precipitación",
+      y="Probabilidad")+
+  theme_minimal()
+
+```
+
+
+```{r}
+eventos<-5
+prob_eventos<-dpois(eventos, lambda_est) 
+prob_x100<-format(prob_eventos, scientific=FALSE)
+prob_x100
+```
+```{r}
+ppois(16,12, lower.tail=FALSE) #EL FALSE ES PARA TOMAR LOS DATOS DE NUESTRA X PARA ARRIBA, SINO VA A TOMAR LOS VALORES DEBAJO DE LA X
+```
+#Modelación 
+```{r}
+data<-warpbreaks
+str(warpbreaks) 
+hist(data$breaks)
+```
+```{r}
+model_p<-glm(breaks~wool+tension,data,family=poisson(link="log")) #es para ver la relacion entre el numero de breaks y el tipo de tela
+summary(model_p) #poisson toma como base una d elas variables, usualmente es en la primera y en este caso es la a
+```
+*se cambia de modelo porque no se ajusta a los datos (se ve con los parametros de dispersion)
+
+```{r}
+model_qp<-glm(breaks~wool+tension,data,family=quasipoisson(link="log"))
+summary(model_qp)
+```
+
+```{r}
+install.packages("arm")
+library(arm)
+```
+
+se estan sacando los coeficientes y el error estandar de cada uno
+```{r}
+coef1=coef(model_p)
+coef2=coef(model_qp)
+
+se.coef1=se.coef(model_p)
+se.coef2=se.coef(model_qp)
+
+models.both<-cbind(coef1, se.coef1, coef2, se.coef2, exponenet=exp(coef1))
+
+models.both
+```
+
+*los coeficientes son iguales y los errores son diferentes, entonces los exponenetes de cada de las variables se le va  arestar a la totalidad por eso es 1-0813....., es la proporsion de veces que desminuye la probabilidad si utilizamos el tipo de lana B
+
+
+Se compara la probabilidad de que la tela A y la tela B, sea mas probable a que se rasgue y se toma la tela A como base, por eso es que solo se est comparando la tela B.
+
+
+*Predecir apartir de un modelo*
+```{r}
+tela_B1<-data.frame(wool="A", tension="M")
+predict(model_qp, tela_B1, type="response")
+```
+del modelo dos pedimos especificamentente los tipos de tenciones de cual es la probabilidad de rupturas. por ejemplo en el tipo de tela B (lana) con tension mediana es probable que genere 23.68 rupturas.
+
+*¿Cual combinacion es mas probable que genere menos roturas?*
+```{r}
+tela_B<-data.frame(wool="B", tension="H")
+predict(model_qp, tela_B, type="response")
+```
+La tela tipo B con una tension alta es la menos probable a generar rupturas, ya que su resultado es de 19.44298
+
+```{r}
+newdata3<-data.frame(wool="B", tension="L")
+predict(model_qp, newdata3, type="response")
+```
+
+```{r}
+tela_A1<-data.frame(wool="A", tension="H")
+predict(model_qp, tela_A1, type="response")
+```
+
+```{r}
+tela_A2<-data.frame(wool="A", tension="M")
+predict(model_qp, tela_A2, type="response")
+```
+
+```{r}
+tela_A3<-data.frame(wool="A", tension="L")
+predict(model_qp, tela_A3, type="response")
+```
+En cuanto la tela tipo A, la que tiene la tension mas alta es la que tiene menos probabilidades de ruptura.
