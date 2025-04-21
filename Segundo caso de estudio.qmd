@@ -1,0 +1,110 @@
+---
+title: "segundo caso de estudio: calidad del agua de manatiales, ríos y lagos"
+author: "Tafoya Ledesma Dante Israel, Arreola García María Bernardette"
+format: pdf
+editor: visual
+---
+
+Se utilizó la base de datos “water_pollution_desease”, la cual se descargó de Kaggle. Se trabajó con esta base de datos porque abarca factores clave como los niveles de contaminantes, el acceso a agua potable, la presencia de bacterias, los métodos de tratamiento del agua, la cobertura de saneamiento y la incidencia de enfermedades como la diarrea, el cólera y la fiebre tifoidea, el país, región, año y tipo de fuente de agua.
+
+Pregunta de investigación: Se tiene tres tipos de fuente de agua (manantial, lago y río) en el año 2014. Se quiere determinar cuál es el que tiene mejor calidad de agua en base a los niveles de nitrato, el conteo de bacterias, la turbidez y el oxígeno disuelto, por el método multicriterio TOPSIS.
+
+Las variables que se ocuparon para este segundo caso de estudio fueron: País, Región, Año, Tipo de fuente, Turbidez, Oxígeno disuelto y Niveles de nitrato. Se ocuparon las primeras cuatro variables para delimitar el estudio y las últimas tres variables se utilizaron para evaluar las condiciones del agua.
+
+Este estudio podría ser útil para tomar decisiones acerca de cuál fuente de agua es la mejor para abastecer a una población, debido a las propiedades físicas y químicas.
+
+La presencia de nitratos en el agua puede tener diversos orígenes relacionados con actividades humanas como la agricultura y la disposición de los desechos de humanos y de animales (Bonilla y Rodriguez, 2008). De entre todas las actividades o instalaciones potencialmente contaminantes por compuestos de nitrógeno, son las prácticas agrarias -abonado, riego y residuos ganaderos- por su amplitud y volúmenes de aplicación, el factor principal de alteración de la calidad de las aguas, aunque sin olvidar que las fuentes puntuales de contaminación pueden repercutir, de forma intensa y localizada, sobre áreas concretas (Fernandez Ruiz, 2007).
+
+La turbidez del agua se genera por la presencia de partículas en suspensión. Mientras algunas son de naturaleza inorgánica (arcillas, fangos y óxidos minerales), que provienen de la erosión del suelo, otras son de naturaleza orgánica (bacterias, parásitos, algas, zooplancton, ácidos fúlvicos y coloides húmicos). Además de las fuentes naturales, las actividades humanas generan efluentes cargados de estas partículas y el aporte de otras sustancias que pueden combinarse con ellas (virus entéricos, contaminantes químicos, cloro, etc…) tanto en el cuerpo de agua como en las plantas y redes de distribución (Marcó, Azario, Metzler & García, 2004)​.
+
+Otro parámetro importante para evaluar la calidad del agua es el oxígeno disuelto. Su presencia es necesaria para la existencia de la vida acuática y la calidad estética de los ríos y lagos, mientras que su ausencia crea condiciones sépticas y de mal sabor y olor propios de la putrefacción que afectan los ecosistemas e impiden el uso de los recursos hídricos sin tratamiento previo. Las descargas de materia orgánica domésticas e industriales en los cuerpos de agua reducen, por la acción microbiana, la concentración del oxígeno disuelto (Secretaría de Medio Ambiente y Recursos Naturales, s. f.).
+
+*Se cargó la base de datos y se le asigno el nombre de "water"*
+
+```{r}
+water<-read.csv(file.choose())
+```
+
+*Se instalaron los paquetes y se llamó las bibliotecas al entorno*
+
+```{r}
+install.packages("topsis")
+install.packages("dplyr")
+library(topsis)
+library(dplyr)
+```
+
+*Se filtro la base de datos para crear un dataframe con los valores correspondientes a México y a la región sur*
+
+```{r}
+mx_sur <- water %>%
+  filter(Country == "Mexico", Region == "South")
+```
+
+*Se creó otro dataframe con los valores de México, la región sur y el año (2014)*
+
+```{r}
+mx_sur_año <- water %>%
+  filter(Country == "Mexico", Region == "South", Year == "2014")
+
+```
+
+|           | Niveles de nitrato | Conteo de bacterias | Turbidez | Oxigeno disuelto |
+|--------------|--------------|---------------|--------------|--------------|
+| Manantial | 37.05              | 3366                | 3.77     | 7.56             |
+| Lago      | 3.43               | 2352                | 4.58     | 5.03             |
+| Río       | 16.87              | 4801                | 0.38     | 8.88             |
+|           |                    |                     |          |                  |
+
+Niveles de nitrato (mg/L, a minimizar)
+
+Recuento de bacterias (CFU/mL, a minimizar)
+
+Turbidez (NTU, a minimizar)
+
+Oxígeno disuelto (mg/L, a maximizar)
+
+Se creó la matriz de desición
+
+```{r}
+matriz_desicion <- matrix(c(37.05, 3366, 3.77, 7.56,
+                            3.43, 2352, 4.58, 5.03,
+                            16.87, 4801, 0.38, 8.88),
+                          nrow = 3, byrow = TRUE)
+```
+
+Para el estudio de caso se utilizaron los parámetros que da la NOM-127-SSA1-2021. Esta es una Norma Oficial Mexicana que establece los límites permisibles de calidad del agua para consumo humano y los tratamientos a los que debe someterse el agua para su potabilización. Esta norma es clave para garantizar que el agua que se distribuye a la población no represente un riesgo para la salud.
+
+```{r}
+pesos <- c(0.11, 0.1, 0.4, 0.5)
+```
+
+*Asignar cuáles son los criterios que se deben de maximizar y minimizar para considerar la calidad del agua*
+
+```{r}
+criterios <- c("-", "-", "-", "+")
+```
+
+*Utilizar el método de TOPSIS*
+
+```{r}
+resultado <- topsis(matriz_desicion, pesos, criterios)
+```
+
+*Muestrar el resultado*
+
+```{r}
+resultado
+```
+
+La alternatica 3 es la que más se acerca a la solución ideal, con un score de 0.859, entonces de acuerdo a la alternativa 3 (río) es el que tiene mejor calidad de agua, tiene el oxígeno disuelto más alto (8.88 mg/L) y la turbidez más baja (0.38 NTU), lo que son buenos indicadores de agua limpia y aunque tiene un valor intermedio en nitratos y alto en bacterias, su balance general es favorable.
+
+Referencias:
+
+Bonilla, J. A., & Rodríguez, M. A. (2008). Contaminación del agua y enfermedades de origen hídrico: una relación con consecuencias múltiples. Revista de Ingeniería, (28), 64–73. https://www.redalyc.org/pdf/467/46780214.pdf
+
+Fernández Ruiz, L. (2007). Los nitratos y las aguas subterráneas en España \[Informe\]. Instituto Geológico y Minero de España.
+
+Marcó, L., Azario, R., Metzler, C., & García, M. C. (2004). La turbidez como indicador básico de calidad de aguas potabilizadas a partir de fuentes superficiales. Propuestas a propósito del estudio del sistema de potabilización y distribución en la ciudad de Concepción del Uruguay (Entre Ríos, Argentina). Higiene y Sanidad Ambiental, 4, 72–82. Recuperado de https://saludpublica.ugr.es/sites/dpto/spublica/public/inline-files/bc510156890491c_Hig.Sanid\_.Ambient.4.72-82(2004).pdf​:contentReference[oaicite:1]{index="1"}
+
+Secretaría de Medio Ambiente y Recursos Naturales (SEMARNAT). (s. f.). Demanda bioquímica de oxígeno en aguas superficiales. Recuperado el 20 de abril de 2025, de https://apps1.semarnat.gob.mx:8443/dgeia/clave19/clave12.html
